@@ -24,10 +24,6 @@ libraryDependencies ++= Seq(
   // Functional Programming
   "org.typelevel" %% "cats-core"   % "2.1.1",
   "org.typelevel" %% "cats-effect" % "2.1.2",
-  //JWT
-  "com.pauldijou" %% "jwt-core" % "4.2.0",
-  // Minio
-  "io.minio" % "minio" % "6.0.13",
   // DB
   "com.typesafe.play" %% "play-slick"            % playSlickVersion,
   "org.postgresql"    % "postgresql"  % postgresVersion,
