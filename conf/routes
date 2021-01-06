@@ -1,1 +1,3 @@
 GET     /healthcheck                           controllers.HealthCheckController.check
+
+GET     /transactions                           controllers.TransactionController.getAll
