@@ -12,9 +12,9 @@ class TransactionTable(tag: Tag) extends Table[Transaction](tag, "transaction") 
   def installments: Rep[Int]       = column[Int]("installments")
   def cardType: Rep[String]        = column[String]("card_type")
   def userId: Rep[Long]            = column[Long]("user_id")
-  def state: Rep[Option[String]]   = column[Option[String]]("status")
+  def status: Rep[Option[String]]  = column[Option[String]]("status")
 
-  def * = (id, amount, cardLast4Digits, dateTime, installments, cardType, userId, state).mapTo[Transaction]
+  def * = (id, amount, cardLast4Digits, dateTime, installments, cardType, userId, status).mapTo[Transaction]
 }
 
 object TransactionTable {
