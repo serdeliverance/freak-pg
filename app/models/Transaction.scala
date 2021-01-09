@@ -1,9 +1,5 @@
 package models
 
-import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
-import io.circe.{Decoder, Encoder}
-import models.json.CirceImplicits
-
 case class Transaction(
     id: Option[Long],
     amount: BigDecimal,
