@@ -1,16 +1,21 @@
 version: '3.7'
 
 services:
+
+  fpg-credit-card:
+    build: ./credit-card-mock-api
+    ports:
+      - 8084:8080
+
   fpg-postgres:
     image: postgres:latest
-    container_name: fpg-postgres
     environment:
       - "TZ=Europe/Amsterdam"
       - "POSTGRES_USER=root"
       - "POSTGRES_PASSWORD=root"
       - "POSTGRES_DB=fpgdb"
     ports:
-      - "45432:5432"
+      - 45432:5432
 
   fpg-adminer:
     image: adminer
