@@ -1,3 +1,5 @@
 GET     /healthcheck                           controllers.HealthCheckController.check
 
-GET     /transactions                           controllers.TransactionController.getAll
+GET     /transactions                          controllers.TransactionController.getAll
+
+GET     /transactions/:userId                  controllers.TransactionController.getByUser(userId: Long)

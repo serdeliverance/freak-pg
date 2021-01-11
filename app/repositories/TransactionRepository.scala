@@ -13,4 +13,9 @@ class TransactionRepository @Inject()(repository: PostgresRepository) extends Lo
 
   def getAll(): Future[Seq[Transaction]] =
     repository.run(transactionTable.result)
+
+  def getByUser(userId: Long): Future[Seq[Transaction]] = {
+    val query = transactionTable.filter(_.userId === userId)
+    repository.run(query.result)
+  }
 }

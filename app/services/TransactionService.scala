@@ -10,4 +10,6 @@ import scala.concurrent.Future
 class TransactionService @Inject()(transactionRepository: TransactionRepository) {
 
   def getAll(): Future[Seq[Transaction]] = transactionRepository.getAll()
+
+  def getByUser(userId: Long): Future[Seq[Transaction]] = transactionRepository.getByUser(userId)
 }

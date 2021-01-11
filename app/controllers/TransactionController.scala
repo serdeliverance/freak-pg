@@ -1,8 +1,9 @@
 package controllers
 
 import controllers.circe.Decodable
-import javax.inject.{Inject, Singleton}
 import io.circe.syntax._
+import javax.inject.{Inject, Singleton}
+import models.Transaction
 import models.json.CirceImplicits
 import play.api.mvc.{BaseController, ControllerComponents}
 import services.TransactionService
@@ -21,6 +22,14 @@ class TransactionController @Inject()(
   def getAll = Action.async { _ =>
     transactionService
       .getAll()
+      .map { transactions =>
+        Ok(transactions.asJson)
+      }
+  }
+
+  def getByUser(userId: Long) = Action.async { _ =>
+    transactionService
+      .getByUser(userId)
       .map { transactions =>
         Ok(transactions.asJson)
       }
