@@ -1,8 +1,8 @@
 package models.json
 
-import io.circe.{Decoder, Encoder, Printer}
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.semiauto.{deriveConfiguredDecoder, deriveConfiguredEncoder}
+import io.circe.{Decoder, Encoder, Printer}
 import models.Transaction
 
 trait CirceImplicits {
