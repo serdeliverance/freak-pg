@@ -34,4 +34,12 @@ class TransactionController @Inject()(
         Ok(transactions.asJson)
       }
   }
+
+  def create() = Action.async(decode[Transaction]) { request =>
+    transactionService
+      .create(request.body)
+      .map { _ =>
+        Created
+      }
+  }
 }

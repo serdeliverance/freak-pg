@@ -18,4 +18,9 @@ class TransactionRepository @Inject()(repository: PostgresRepository) extends Lo
     val query = transactionTable.filter(_.userId === userId)
     repository.run(query.result)
   }
+
+  def save(transaction: Transaction): Future[Int] = {
+    logger.info("Saving transaction")
+    repository.run(transactionTable += transaction)
+  }
 }
