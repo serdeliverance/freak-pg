@@ -33,17 +33,12 @@ class TransactionService @Inject()(
   def getByUser(userId: Long): Future[Seq[Transaction]] = transactionRepository.getByUser(userId)
 
   def create(transaction: Transaction): Future[Done] =
-    validateUser(transaction.userId)
-      .flatMap { _ =>
-        sendToCreditCard(transaction)
-          .flatMap { creditCardResponse =>
-            transactionRepository
-              .save(transaction.copy(status = Some(creditCardResponse.status)))
-              .flatMap { _ =>
-                notificationService.send("transaction created")
-              }
-          }
-      }
+    for {
+      _    <- validateUser(transaction.userId)
+      resp <- sendToCreditCard(transaction)
+      _    <- transactionRepository.save(transaction.copy(status = Some(resp.status)))
+      _    <- notificationService.send("transaction created")
+    } yield Done
 
   private def validateUser(userId: Long): Future[Done] =
     userService
