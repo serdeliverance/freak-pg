@@ -13,6 +13,7 @@ lazy val postgresVersion  = "42.2.2"
 
 libraryDependencies ++= Seq(
   guice,
+  ws,
   // Logs
   "net.logstash.logback" % "logstash-logback-encoder" % "5.1",
   // Json

@@ -3,7 +3,7 @@ package models
 case class Transaction(
     id: Option[Long],
     amount: BigDecimal,
-    cardLast4Digits: String,
+    cardLastDigits: String,
     dateTime: String,
     installments: Int,
     cardType: String,

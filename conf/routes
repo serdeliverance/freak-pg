@@ -3,3 +3,5 @@ GET     /healthcheck                           controllers.HealthCheckController
 GET     /transactions                          controllers.TransactionController.getAll
 
 GET     /transactions/:userId                  controllers.TransactionController.getByUser(userId: Long)
+
+POST    /transactions                          controllers.TransactionController.create

@@ -31,7 +31,7 @@ The API exposes the following operations:
 ```
 curl -X POST -H "Content-Type: application/json" \
     -d '{"amount": 100, "card_last_4_digits": "4532", "date_time": "2021-01-09 16:28:25.700", "installments": 2, "card_type": "VISA", "user_id": 3}' \
-    http://localhost:9000/transactions/process
+    http://localhost:9000/transactions
 ```
 
 * Get all transactions
