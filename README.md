@@ -46,4 +46,12 @@ curl -i -H "Accept: application/json" -H "Content-Type: application/json" -X GET
 curl -i -H "Accept: application/json" -H "Content-Type: application/json" -X GET http://localhost:9000/transactions/:userId
 ```
 
-* Update transaction 
+* Update transaction
+
+## Docker Image
+
+To generate the Docker image, run:
+
+```
+sbt docker
+```

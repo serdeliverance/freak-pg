@@ -3,7 +3,7 @@ organization := "com.serdeliverance"
 
 version := "1.0-SNAPSHOT"
 
-lazy val root = (project in file(".")).enablePlugins(PlayScala)
+lazy val root = (project in file(".")).enablePlugins(PlayScala, sbtdocker.DockerPlugin)
 
 scalaVersion := "2.13.3"
 
@@ -45,3 +45,16 @@ scalacOptions ++= Seq(
   "-language:implicitConversions", // Allow definition of implicit functions called views
   "-unchecked", // Enable additional warnings where generated code depends on assumptions.
 )
+
+// Dockerfile template
+dockerfile in docker := {
+  val appDir: File       = stage.value
+  new Dockerfile {
+    from(s"openjdk:8-jre-slim")
+    maintainer("serdeliverance")
+    expose(9000, 9443)
+    workDir("/opt/docker")
+    add(appDir, "/opt/docker")
+    entryPoint("/opt/docker/conf/wrapper.sh")
+  }
+}
