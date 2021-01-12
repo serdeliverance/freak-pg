@@ -3,7 +3,7 @@ organization := "com.serdeliverance"
 
 version := "1.0-SNAPSHOT"
 
-lazy val root = (project in file(".")).enablePlugins(PlayScala)
+lazy val root = (project in file(".")).enablePlugins(PlayScala, sbtdocker.DockerPlugin)
 
 scalaVersion := "2.13.3"
 
@@ -45,3 +45,19 @@ scalacOptions ++= Seq(
   "-language:implicitConversions", // Allow definition of implicit functions called views
   "-unchecked", // Enable additional warnings where generated code depends on assumptions.
 )
+
+dockerfile in docker := {
+  val jarFile: File = sbt.Keys.`package`.in(Compile, packageBin).value
+  val classpath = (managedClasspath in Compile).value
+  val mainclass = mainClass.in(Compile, packageBin).value.getOrElse(sys.error("Expected exactly one main class"))
+  val jarTarget = s"/app/${jarFile.getName}"
+  // Make a colon separated classpath with the JAR file
+  val classpathString = classpath.files.map("/app/" + _.getName)
+    .mkString(":") + ":" + jarTarget
+  new Dockerfile {
+    from("openjdk:8-jre")
+    add(classpath.files, "/app/")
+    add(jarFile, jarTarget)
+    entryPoint("java", "-cp", classpathString, mainclass)
+  }
+}
