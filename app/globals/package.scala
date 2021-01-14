@@ -1,3 +1,4 @@
+import cats.data.EitherT
 import models.errors.ApplicationError
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -25,5 +26,7 @@ package object globals {
         case Left(err)    => Right(f(err))
         case Right(value) => Right(value)
       }
+
+    def toEitherT(): EitherT[Future, ApplicationError, A] = EitherT(applicationResult)
   }
 }
