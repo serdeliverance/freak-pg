@@ -1,6 +1,7 @@
 package controllers
 
 import controllers.circe.Decodable
+import controllers.converters.ErrorToResultConverter
 import io.circe.syntax._
 import javax.inject.{Inject, Singleton}
 import models.Transaction
@@ -17,21 +18,30 @@ class TransactionController @Inject()(
   )(implicit ec: ExecutionContext)
     extends BaseController
     with Decodable
-    with CirceImplicits {
+    with CirceImplicits
+    with ErrorToResultConverter {
 
   def getAll = Action.async { _ =>
     transactionService
       .getAll()
-      .map { transactions =>
-        Ok(transactions.asJson)
+      .map {
+        case Right(transactions) =>
+          Ok(transactions.asJson)
+        case Left(error) =>
+          logger.info("Error retrieving transactions")
+          handleError(error)
       }
   }
 
   def getByUser(userId: Long) = Action.async { _ =>
     transactionService
       .getByUser(userId)
-      .map { transactions =>
-        Ok(transactions.asJson)
+      .map {
+        case Right(transactions) =>
+          Ok(transactions.asJson)
+        case Left(error) =>
+          logger.info(s"Error retrieving transactions for user :$userId")
+          handleError(error)
       }
   }
 
