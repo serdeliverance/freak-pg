@@ -1,15 +1,19 @@
 package controllers
 
+import akka.Done
 import controllers.circe.Decodable
 import controllers.converters.ErrorToResultConverter
+import globals.{ApplicationResult, EitherResult}
 import io.circe.syntax._
 import javax.inject.{Inject, Singleton}
 import models.Transaction
+import models.errors.ApplicationError
 import models.json.CirceImplicits
-import play.api.mvc.{BaseController, ControllerComponents}
+import play.api.Logger
+import play.api.mvc.{BaseController, ControllerComponents, Result}
 import services.TransactionService
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class TransactionController @Inject()(
@@ -48,8 +52,26 @@ class TransactionController @Inject()(
   def create() = Action.async(decode[Transaction]) { request =>
     transactionService
       .create(request.body)
-      .map { _ =>
-        Created
+      .flatMap { result =>
+        mapEitherResult[Done](result)(_ => Created, handleError)("Transaction created successfully",
+                                                                 "error creating transaction")(logger)
       }
   }
+
+  private def mapEitherResult[T](
+      appResult: EitherResult[T]
+    )(handleSuccess: T => Result,
+      handleError: ApplicationError => Result
+    )(successMsg: String = "Operation success",
+      errorMsg: String = "Operation failed"
+    )(implicit logger: Logger
+    ): Future[Result] =
+    appResult.map {
+      case Right(result) =>
+        logger.info(successMsg)
+        handleSuccess(result)
+      case Left(error) =>
+        logger.info(errorMsg)
+        handleError(error)
+    }
 }
