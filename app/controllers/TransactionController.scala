@@ -1,19 +1,17 @@
 package controllers
 
-import akka.Done
 import controllers.circe.Decodable
 import controllers.converters.ErrorToResultConverter
-import globals.{ApplicationResult, EitherResult}
+import globals._
 import io.circe.syntax._
 import javax.inject.{Inject, Singleton}
 import models.Transaction
 import models.errors.ApplicationError
 import models.json.CirceImplicits
-import play.api.Logger
 import play.api.mvc.{BaseController, ControllerComponents, Result}
 import services.TransactionService
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class TransactionController @Inject()(
@@ -28,50 +26,35 @@ class TransactionController @Inject()(
   def getAll = Action.async { _ =>
     transactionService
       .getAll()
-      .map {
-        case Right(transactions) =>
-          Ok(transactions.asJson)
-        case Left(error) =>
-          logger.info("Error retrieving transactions")
-          handleError(error)
-      }
+      .mapEitherResult(
+        transactions => Ok(transactions.asJson),
+        defaultErrorHandlerWithMessage("Error getting all transactions")
+      )
   }
 
   def getByUser(userId: Long) = Action.async { _ =>
     transactionService
       .getByUser(userId)
-      .map {
-        case Right(transactions) =>
+      .mapEitherResult(
+        transactions => {
           Ok(transactions.asJson)
-        case Left(error) =>
-          logger.info(s"Error retrieving transactions for user :$userId")
-          handleError(error)
-      }
+        },
+        defaultErrorHandlerWithMessage(s"Error getting transactions for userId: $userId")
+      )
   }
 
   def create() = Action.async(decode[Transaction]) { request =>
     transactionService
       .create(request.body)
-      .flatMap { result =>
-        mapEitherResult[Done](result)(_ => Created, handleError)("Transaction created successfully",
-                                                                 "error creating transaction")(logger)
-      }
+      .mapEitherResult(_ => {
+        logger.info("Transaction created")
+        Created
+      }, defaultErrorHandlerWithMessage("Error creating transaction"))
   }
 
-  private def mapEitherResult[T](
-      appResult: EitherResult[T]
-    )(handleSuccess: T => Result,
-      handleError: ApplicationError => Result
-    )(successMsg: String = "Operation success",
-      errorMsg: String = "Operation failed"
-    )(implicit logger: Logger
-    ): Future[Result] =
-    appResult.map {
-      case Right(result) =>
-        logger.info(successMsg)
-        handleSuccess(result)
-      case Left(error) =>
-        logger.info(errorMsg)
-        handleError(error)
+  private def defaultErrorHandlerWithMessage(msg: String): ApplicationError => Result =
+    error => {
+      logger.info(msg)
+      handleError(error)
     }
 }

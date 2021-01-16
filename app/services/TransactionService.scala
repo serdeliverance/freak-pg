@@ -48,14 +48,14 @@ class TransactionService @Inject()(
   private def validateUser(userId: Long): ApplicationResult[Done] =
     userService
       .get(userId)
-      .map {
+      .map(_.flatMap {
         case Some(_) =>
           logger.info("User validation success")
           Right(done())
         case _ =>
           logger.info("User does not exists")
           Left(GenericError("User does not exits"))
-      }
+      })
 
   private def sendToCreditCard(transaction: Transaction): ApplicationResult[CreateTransactionResponse] =
     wsClient

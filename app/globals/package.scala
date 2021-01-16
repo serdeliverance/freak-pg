@@ -1,5 +1,6 @@
 import cats.data.EitherT
 import models.errors.ApplicationError
+import play.api.mvc.Result
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -28,5 +29,12 @@ package object globals {
       }
 
     def toEitherT(): EitherT[Future, ApplicationError, A] = EitherT(applicationResult)
+
+    def mapEitherResult(
+        handleSuccess: A => Result,
+        handleError: ApplicationError => Result
+      )(implicit ec: ExecutionContext
+      ): Future[Result] =
+      applicationResult.map(_.fold(handleError, handleSuccess))
   }
 }
