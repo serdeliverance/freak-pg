@@ -3,17 +3,21 @@ package services
 import akka.Done
 import akka.Done.done
 import configuration.CREDIT_CARD_API_URL
+import globals.ApplicationResult._
+import globals.{ApplicationResult, ApplicationResultExtended}
 import io.circe.parser.decode
 import io.circe.syntax._
 import javax.inject.{Inject, Singleton}
 import models.Transaction
+import models.errors.{ClientError, ExternalServiceError, GenericError}
 import models.json.CirceImplicits
 import models.response.CreateTransactionResponse
-import play.api.{Configuration, Logging}
 import play.api.libs.ws.WSClient
+import play.api.{Configuration, Logging}
 import repositories.TransactionRepository
+import cats.implicits._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class TransactionService @Inject()(
@@ -28,45 +32,53 @@ class TransactionService @Inject()(
 
   private val creditCardApiUrl = configuration.get[String](CREDIT_CARD_API_URL)
 
-  def getAll(): Future[Seq[Transaction]] = transactionRepository.getAll()
+  def getAll(): ApplicationResult[Seq[Transaction]] = transactionRepository.getAll()
 
-  def getByUser(userId: Long): Future[Seq[Transaction]] = transactionRepository.getByUser(userId)
+  def getByUser(userId: Long): ApplicationResult[Seq[Transaction]] = transactionRepository.getByUser(userId)
 
-  def create(transaction: Transaction): Future[Done] =
+  def create(transaction: Transaction): ApplicationResult[Done] = {
     for {
-      _    <- validateUser(transaction.userId)
-      resp <- sendToCreditCard(transaction)
-      _    <- transactionRepository.save(transaction.copy(status = Some(resp.status)))
-      _    <- notificationService.send("transaction created")
+      _    <- validateUser(transaction.userId).toEitherT()
+      resp <- sendToCreditCard(transaction).toEitherT()
+      _    <- transactionRepository.save(transaction.copy(status = Some(resp.status))).toEitherT()
+      _    <- notificationService.send("transaction created").toEitherT()
     } yield Done
+  }.value
 
-  private def validateUser(userId: Long): Future[Done] =
+  private def validateUser(userId: Long): ApplicationResult[Done] =
     userService
       .get(userId)
-      .map {
+      .map(_.flatMap {
         case Some(_) =>
           logger.info("User validation success")
-          done()
+          Right(done())
         case _ =>
           logger.info("User does not exists")
-          throw new IllegalArgumentException("User does not exists")
-      }
+          Left(GenericError("User does not exits"))
+      })
 
-  private def sendToCreditCard(transaction: Transaction): Future[CreateTransactionResponse] =
+  private def sendToCreditCard(transaction: Transaction): ApplicationResult[CreateTransactionResponse] =
     wsClient
       .url(creditCardApiUrl)
       .post(transaction.asJson.toString)
       .flatMap { response =>
-        decode[CreateTransactionResponse](response.body)
-          .fold(
-            _ => {
-              logger.info("Failed to communicate with API or decoding response")
-              Future.failed(new IllegalArgumentException("failed to decoding response"))
-            },
-            resp => {
-              logger.info(s"Credit card api has ${resp.status} the transaction")
-              Future.successful(resp)
-            }
-          )
+        response.status match {
+          case 200 =>
+            decode[CreateTransactionResponse](response.body)
+              .fold(
+                _ => {
+                  logger.info("Failed to communicate with external service")
+                  error(ExternalServiceError)
+                },
+                resp => {
+                  logger.info(s"Credit card api has ${resp.status} the transaction")
+                  ApplicationResult(resp)
+                }
+              )
+          case 400 =>
+            logger.info("Missing argument or payload")
+            error(ClientError("Malformed data or payload"))
+        }
       }
+
 }

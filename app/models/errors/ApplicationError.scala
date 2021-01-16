@@ -13,3 +13,7 @@ case class DataBaseError(msg: String) extends ApplicationError
 case class UnexpectedError(throwable: Throwable) extends ApplicationError
 
 case class ClientError(errorMessage: String) extends ApplicationError
+
+case object ExternalServiceError extends ApplicationError
+
+case class GenericError(msg: String) extends ApplicationError
