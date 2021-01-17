@@ -30,7 +30,7 @@ package object globals {
 
     def toEitherT(): EitherT[Future, ApplicationError, A] = EitherT(applicationResult)
 
-    def mapEitherResult(
+    def mapToResult(
         handleSuccess: A => Result,
         handleError: ApplicationError => Result
       )(implicit ec: ExecutionContext

@@ -26,7 +26,7 @@ class TransactionController @Inject()(
   def getAll = Action.async { _ =>
     transactionService
       .getAll()
-      .mapEitherResult(
+      .mapToResult(
         transactions => Ok(transactions.asJson),
         defaultErrorHandlerWithMessage("Error getting all transactions")
       )
@@ -35,7 +35,7 @@ class TransactionController @Inject()(
   def getByUser(userId: Long) = Action.async { _ =>
     transactionService
       .getByUser(userId)
-      .mapEitherResult(
+      .mapToResult(
         transactions => {
           Ok(transactions.asJson)
         },
@@ -46,7 +46,7 @@ class TransactionController @Inject()(
   def create() = Action.async(decode[Transaction]) { request =>
     transactionService
       .create(request.body)
-      .mapEitherResult(_ => {
+      .mapToResult(_ => {
         logger.info("Transaction created")
         Created
       }, defaultErrorHandlerWithMessage("Error creating transaction"))
